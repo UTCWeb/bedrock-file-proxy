@@ -1,6 +1,6 @@
-# Stage File Proxy
+# WordPress Bedrock Stage File Proxy
 
-Mirror (or header to) uploaded files from a remote production site on your local development copy. Saves the trouble of downloading a giant uploads directory without sacrificing the images that accompany content.
+Mirror (or header to) uploaded files from a remote production Bedrock-flavored WordPress site or multisite on your local development copy. Saves the trouble of downloading a giant uploads directory without sacrificing the images that accompany content.
 
 ## Installation
 
@@ -9,14 +9,14 @@ Mirror (or header to) uploaded files from a remote production site on your local
 ```json
 {
   "type": "vcs",
-  "url": "git@github.com:cleverington/stage-file-proxy.git"
+  "url": "git@github.com:UTCWeb/bedrock-file-proxy.git"
 },
 ```
 
 2. Install via composer using `--dev` so it only installs on non-production deployments:
 
 ```bash
-composer require cleverington/stage-file-proxy:"*" --dev
+composer require UTCWeb/bedrock-file-proxy:"*" --dev
 ```
 
 ### No Composer Installation
@@ -26,7 +26,7 @@ composer require cleverington/stage-file-proxy:"*" --dev
 
 ## Setup
 
-Stage File Proxy runs when WordPress is serving a 404 response for a request to the uploads directory. If your server intercepts these requests instead of passing them to WordPress, the plugin will not work.
+Bedrock File Proxy runs when WordPress is serving a 404 response for a request to the web/app/uploads or wp-uploads directory.
 
 There are four options for this plugin, though only two are currently available via the UI. WP-CLI can be used to tweak the setting though, such as adjusting the mode to `header`.
 
