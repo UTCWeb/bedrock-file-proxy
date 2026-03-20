@@ -3,7 +3,7 @@
  * Plugin Name: Bedrock File Proxy
  * Plugin URI: https://blog.utc.edu
  * Description: Get only the files you need from your production environment. Don't run this in production!
- * Version: 0.1.4
+ * Version: 0.1.5
  * Author: University of Tennessee at Chattanooga
  * Author URI: https://www.utc.edu
  */
