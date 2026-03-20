@@ -22,8 +22,10 @@
       "name": "Taoti",
       "email": "cleverington@taoti.com"
     },
+    {
 	  "name": "UTCWeb",
 	  "email": "web@utc.edu"
+	}
   ],
   "require": {
     "php": "^8.0"
