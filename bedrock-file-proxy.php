@@ -3,7 +3,7 @@
  * Plugin Name: Bedrock File Proxy
  * Plugin URI: https://blog.utc.edu
  * Description: Get only the files you need from your production environment. Don't run this in production!
- * Version: 0.1.3
+ * Version: 0.1.4
  * Author: University of Tennessee at Chattanooga
  * Author URI: https://www.utc.edu
  */
@@ -11,7 +11,7 @@
 /**
  * The majority of this plugin is an upgraded and modernized version of the Stage
  * File Proxy plugin published, and deprecated, by Alley Interactive. Further work
- * was done by Charles Leverington, Taoti Creative: https://taoti.com
+ * was done by Charles Leverington, Taoti Creative: https://taoti.com.
  * Adapted for Bedrock WordPress Multisite by PHPStorm AI and UTChatttanooga.
  */
 
