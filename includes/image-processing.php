@@ -1,6 +1,6 @@
 <?php
 /*
- * Stage File Proxy: Image Processing
+ * Bedrock File Proxy: Image Processing
  */
 
 /*
@@ -16,14 +16,14 @@
  * The dynamic resizing portion was adapted from dynamic-image-resizer.
  * See: https://wordpress.org/plugins/dynamic-image-resizer/
  */
-add_action( 'activated_plugin', 'sfp_first' );
+add_action( 'activated_plugin', 'bfp_first' );
 
-if ( sfp_is_upload_request() ) {
-	sfp_expect();
+if ( bfp_is_upload_request() ) {
+	bfp_expect();
 }
 
-add_filter( 'wp_generate_attachment_metadata', 'sfp_generate_metadata' );
-add_filter( 'intermediate_image_sizes_advanced', 'sfp_image_sizes_advanced' );
+add_filter( 'wp_generate_attachment_metadata', 'bfp_generate_metadata' );
+add_filter( 'intermediate_image_sizes_advanced', 'bfp_image_sizes_advanced' );
 
 /**
  * Determine whether the current request is for an uploads asset path.
@@ -33,7 +33,7 @@ add_filter( 'intermediate_image_sizes_advanced', 'sfp_image_sizes_advanced' );
  *
  * @return bool
  */
-function sfp_is_upload_request(): bool {
+function bfp_is_upload_request(): bool {
 	$request_uri = $_SERVER['REQUEST_URI'] ?? '';
 
 	return false !== stripos( $request_uri, '/wp-content/uploads/' )
@@ -41,12 +41,12 @@ function sfp_is_upload_request(): bool {
 }
 
 /**
- * Load SFP before anything else to silence other plugins' warnings.
+ * Load BFP before anything else to silence other plugins' warnings.
  *
  * @see https://wordpress.org/support/topic/how-to-change-plugins-load-order
  */
-function sfp_first(): void {
-	$plugin_path    = 'stage-file-proxy/stage-file-proxy.php';
+function bfp_first(): void {
+	$plugin_path    = 'bedrock-file-proxy/bedrock-file-proxy.php';
 	$active_plugins = get_option( 'active_plugins' );
 	$plugin_key     = array_search( $plugin_path, $active_plugins, true );
 
@@ -60,10 +60,10 @@ function sfp_first(): void {
 /**
  * This function, triggered above, sets the chain in motion.
  */
-function sfp_expect(): void {
+function bfp_expect(): void {
 	ob_start();
 	ini_set( 'display_errors', 'off' ); // phpcs:ignore
-	add_action( 'init', 'sfp_dispatch' );
+	add_action( 'init', 'bfp_dispatch' );
 }
 
 /**
@@ -72,12 +72,12 @@ function sfp_expect(): void {
  * @param string|null $path The path to check.
  * @return string The full URL.
  */
-function sfp_get_url( ?string $path = null ): string {
+function bfp_get_url( ?string $path = null ): string {
 	if ( ! $path ) {
-		$path = sfp_get_relative_path();
+		$path = bfp_get_relative_path();
 	}
 
-	return sfp_get_base_url() . $path;
+	return bfp_get_base_url() . $path;
 }
 
 /**
@@ -89,19 +89,18 @@ function sfp_get_url( ?string $path = null ): string {
  *
  * Ideally we could do this in one pass.
  */
-function sfp_dispatch(): void {
-	$mode          = sfp_get_mode();
-	$relative_path = sfp_get_relative_path();
+function bfp_dispatch(): void {
+	$mode         = bfp_get_mode();
+	$relative_path = bfp_get_relative_path();
 
 	if ( 'header' === $mode ) {
-		header( 'Location: ' . sfp_get_base_url() . $relative_path );
+		header( 'Location: ' . bfp_get_base_url() . $relative_path );
 		exit;
 	}
 
 	$doing_resize = false;
 	$resize       = array();
 
-	// resize an image maybe
 	if ( preg_match( '/(.+)(-r)?-([0-9]+)x([0-9]+)(c)?\.(jpe?g|png|gif)/iU', $relative_path, $matches ) ) {
 		$doing_resize       = true;
 		$resize['filename'] = $matches[1] . '.' . $matches[6];
@@ -110,80 +109,40 @@ function sfp_dispatch(): void {
 		$resize['crop']     = ! empty( $matches[5] );
 		$resize['mode']     = substr( (string) $matches[2], 1 );
 
-		if ( 'photon' === $mode ) {
-			header(
-				'Location: ' . add_query_arg(
-					array(
-						'w'      => $resize['width'],
-						'h'      => $resize['height'],
-						'resize' => $resize['crop'] ? "{$resize['width']},{$resize['height']}" : null,
-					),
-					sfp_get_base_url() . $resize['filename']
-				)
-			);
-			exit;
-		}
-
-		$basefile = sfp_get_local_upload_path( $resize['filename'] );
-		sfp_resize_image( $basefile, $resize );
+		$basefile = bfp_get_local_upload_path( $resize['filename'] );
+		bfp_resize_image( $basefile, $resize );
 		$relative_path = $resize['filename'];
-	} elseif ( 'photon' === $mode ) {
-		header( 'Location: ' . sfp_get_base_url() . $relative_path );
-		exit;
 	}
 
-	// Download a full-size original from the remote server.
-	// If it needs to be resized, it will be on the next load.
-	$remote_url = sfp_get_url( $relative_path );
+	$remote_url = bfp_get_url( $relative_path );
 
-	/**
-	 * Filter: sfp_http_request_args
-	 *
-	 * Alter the args of the GET request.
-	 *
-	 * @param array $remote_http_request_args The request arguments.
-	 */
-	$remote_http_request_args = apply_filters( 'sfp_http_remote_args', array( 'timeout' => 30 ) );
-	$remote_request           = wp_remote_get( $remote_url, $remote_http_request_args );
-	$response_code            = wp_remote_retrieve_response_code( $remote_request );
+	$remote_http_request_args = apply_filters( 'bfp_http_remote_args', array( 'timeout' => 30 ) );
+	$remote_http_request_args = apply_filters( 'sfp_http_remote_args', $remote_http_request_args );
+
+	$remote_request = wp_remote_get( $remote_url, $remote_http_request_args );
+	$response_code  = wp_remote_retrieve_response_code( $remote_request );
 
 	if ( is_wp_error( $remote_request ) || $response_code >= 400 ) {
-		// If local mode, failover to local files.
-		if ( 'local' === $mode ) {
-			$transient_key = 'sfp_image_' . md5( $_SERVER['REQUEST_URI'] ); // phpcs:ignore
-
-			if ( false === ( $basefile = get_transient( $transient_key ) ) ) {
-				$basefile = sfp_get_random_local_file_path();
-				set_transient( $transient_key, $basefile );
-			}
-
-			if ( $doing_resize ) {
-				sfp_resize_image( $basefile, $resize );
-			} else {
-				sfp_serve_requested_file( $basefile );
-			}
-		}
-
-		sfp_error();
+		bfp_error();
 	}
 
-	$local_file = sfp_get_local_upload_path( $relative_path );
+	$local_file = bfp_get_local_upload_path( $relative_path );
 	$local_dir  = dirname( $local_file );
 
 	if ( ! wp_mkdir_p( $local_dir ) ) {
-		sfp_error();
+		bfp_error();
 	}
 
 	$bytes_written = file_put_contents( $local_file, wp_remote_retrieve_body( $remote_request ) );
 
 	if ( false === $bytes_written ) {
-		sfp_error();
+		bfp_error();
 	}
 
 	if ( $doing_resize ) {
-		sfp_dispatch();
+		bfp_dispatch();
 	} else {
-		sfp_serve_requested_file( $local_file );
+		bfp_serve_requested_file( $local_file );
 	}
 }
 
@@ -193,7 +152,7 @@ function sfp_dispatch(): void {
  * @param string $basefile The path to the file to resize.
  * @param array  $resize   The resize parameters.
  */
-function sfp_resize_image( string $basefile, array $resize ): void {
+function bfp_resize_image( string $basefile, array $resize ): void {
 	if ( ! file_exists( $basefile ) ) {
 		return;
 	}
@@ -208,9 +167,8 @@ function sfp_resize_image( string $basefile, array $resize ): void {
 
 	$img = wp_get_image_editor( $basefile );
 
-	// wp_get_image_editor can return a WP_Error if the file exists but is corrupted.
 	if ( is_wp_error( $img ) ) {
-		sfp_error();
+		bfp_error();
 	}
 
 	$img->resize( (int) $resize['width'], (int) $resize['height'], (bool) $resize['crop'] );
@@ -219,10 +177,10 @@ function sfp_resize_image( string $basefile, array $resize ): void {
 	$save_result      = $img->save( $path_to_new_file );
 
 	if ( is_wp_error( $save_result ) || empty( $save_result['path'] ) ) {
-		sfp_error();
+		bfp_error();
 	}
 
-	sfp_serve_requested_file( $path_to_new_file );
+	bfp_serve_requested_file( $path_to_new_file );
 }
 
 /**
@@ -230,9 +188,9 @@ function sfp_resize_image( string $basefile, array $resize ): void {
  *
  * @param string $filename The path to the file to serve.
  */
-function sfp_serve_requested_file( string $filename ): void {
+function bfp_serve_requested_file( string $filename ): void {
 	if ( ! file_exists( $filename ) ) {
-		sfp_error();
+		bfp_error();
 	}
 
 	$finfo = finfo_open( FILEINFO_MIME_TYPE );
@@ -259,13 +217,11 @@ function sfp_serve_requested_file( string $filename ): void {
  * @param array $sizes Associative array of image sizes to be created.
  * @return array
  */
-function sfp_image_sizes_advanced( array $sizes ): array {
+function bfp_image_sizes_advanced( array $sizes ): array {
 	global $dynimg_image_sizes;
 
-	// save the sizes to a global, because the next function needs them to lie to WP about what sizes were generated
 	$dynimg_image_sizes = $sizes;
 
-	// force WP to not make sizes by telling it there's no sizes to make
 	return array();
 }
 
@@ -275,7 +231,7 @@ function sfp_image_sizes_advanced( array $sizes ): array {
  * @param array $meta An array of attachment meta data.
  * @return array
  */
-function sfp_generate_metadata( $meta ) {
+function bfp_generate_metadata( $meta ) {
 	global $dynimg_image_sizes;
 
 	if ( ! is_array( $dynimg_image_sizes ) ) {
@@ -312,12 +268,10 @@ function sfp_generate_metadata( $meta ) {
  * Get the relative file path by stripping out the uploads base path.
  *
  * Supports both /wp-content/uploads/... and /app/uploads/...
- * Preserves multisite paths like sites/9/... because those are part of the
- * real remote uploads location.
  *
  * @return string The relative path.
  */
-function sfp_get_relative_path(): string {
+function bfp_get_relative_path(): string {
 	static $path;
 
 	if ( ! $path ) {
@@ -325,11 +279,7 @@ function sfp_get_relative_path(): string {
 		$path        = preg_replace( '/.*(?:\/wp-content\/uploads|\/app\/uploads)\//i', '', $request_uri );
 	}
 
-	/**
-	 * Filters the relative path of an image in SFP.
-	 *
-	 * @param string $path The relative path of the file.
-	 */
+	$path = apply_filters( 'bfp_relative_path', $path );
 	$path = apply_filters( 'sfp_relative_path', $path );
 
 	return (string) $path;
@@ -340,13 +290,16 @@ function sfp_get_relative_path(): string {
  *
  * @return string The local path to the file.
  */
-function sfp_get_random_local_file_path(): string {
+function bfp_get_random_local_file_path(): string {
 	static $local_dir;
 
-	$transient_key = 'sfp-replacement-images';
+	$transient_key = 'bfp-replacement-images';
 
 	if ( ! $local_dir ) {
-		$local_dir = get_option( 'sfp_local_dir' );
+		$local_dir = get_option( 'bfp_local_dir' );
+		if ( ! $local_dir ) {
+			$local_dir = get_option( 'sfp_local_dir' );
+		}
 		if ( ! $local_dir ) {
 			$local_dir = 'sfp-images';
 		}
@@ -367,7 +320,7 @@ function sfp_get_random_local_file_path(): string {
 	}
 
 	if ( empty( $images ) ) {
-		sfp_error();
+		bfp_error();
 	}
 
 	$rand = wp_rand( 0, count( $images ) - 1 );
@@ -380,11 +333,14 @@ function sfp_get_random_local_file_path(): string {
  *
  * @return string The saved mode. Default is 'header'.
  */
-function sfp_get_mode(): string {
+function bfp_get_mode(): string {
 	static $mode;
 
 	if ( ! $mode ) {
-		$mode = get_option( 'sfp_mode' );
+		$mode = get_option( 'bfp_mode' );
+		if ( ! $mode ) {
+			$mode = get_option( 'sfp_mode' );
+		}
 		if ( ! $mode ) {
 			$mode = 'header';
 		}
@@ -398,15 +354,18 @@ function sfp_get_mode(): string {
  *
  * @return string
  */
-function sfp_get_base_url(): string {
+function bfp_get_base_url(): string {
 	static $url;
 
-	$mode = sfp_get_mode();
+	$mode = bfp_get_mode();
 
 	if ( ! $url ) {
-		$url = get_option( 'sfp_url' );
+		$url = get_option( 'bfp_url' );
+		if ( ! $url ) {
+			$url = get_option( 'sfp_url' );
+		}
 		if ( ! $url && 'local' !== $mode ) {
-			sfp_error();
+			bfp_error();
 		}
 	}
 
@@ -416,8 +375,8 @@ function sfp_get_base_url(): string {
 /**
  * Die with an error.
  */
-function sfp_error(): void {
-	wp_die( esc_html__( 'SFP tried to load but encountered an error', 'stage-file-proxy' ) );
+function bfp_error(): void {
+	wp_die( esc_html__( 'BFP tried to load but encountered an error', 'bedrock-file-proxy' ) );
 }
 
 /**
@@ -425,20 +384,16 @@ function sfp_error(): void {
  *
  * @return string
  */
-function sfp_get_local_uploads_root(): string {
+function bfp_get_local_uploads_root(): string {
 	return trailingslashit( WP_CONTENT_DIR ) . 'uploads';
 }
 
 /**
  * Convert an uploads-relative path into an absolute local file path.
  *
- * Examples:
- * - 2026/02/file.jpg
- * - sites/9/2026/02/file.jpg
- *
  * @param string $relative_path The path relative to uploads.
  * @return string
  */
-function sfp_get_local_upload_path( string $relative_path ): string {
-	return trailingslashit( sfp_get_local_uploads_root() ) . ltrim( $relative_path, '/' );
+function bfp_get_local_upload_path( string $relative_path ): string {
+	return trailingslashit( bfp_get_local_uploads_root() ) . ltrim( $relative_path, '/' );
 }

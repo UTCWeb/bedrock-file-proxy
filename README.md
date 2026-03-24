@@ -1,4 +1,4 @@
-# WordPress Bedrock Stage File Proxy
+# WordPress Bedrock File Proxy
 
 Mirror (or header to) uploaded files from a remote production Bedrock-flavored WordPress site or multisite on your local development copy. Saves the trouble of downloading a giant uploads directory without sacrificing the images that accompany content.
 
@@ -9,14 +9,14 @@ Mirror (or header to) uploaded files from a remote production Bedrock-flavored W
 ```json
 {
   "type": "vcs",
-  "url": "git@github.com:UTCWeb/bedrock-file-proxy.git"
+  "url": "git@github.com:utcweb/bedrock-file-proxy.git"
 },
 ```
 
 2. Install via composer using `--dev` so it only installs on non-production deployments:
 
 ```bash
-composer require UTCWeb/bedrock-file-proxy:"*" --dev
+composer require utcweb/bedrock-file-proxy:"*" --dev
 ```
 
 ### No Composer Installation
@@ -31,17 +31,22 @@ Bedrock File Proxy runs when WordPress is serving a 404 response for a request t
 There are four options for this plugin, though only two are currently available via the UI. WP-CLI can be used to tweak the setting though, such as adjusting the mode to `header`.
 
 ```shell
-wp option update sfp_mode header
+wp option update bfp_mode header
 ```
+
 
 ## Available options
 
-* `sfp_mode`: The method used to retrieve the remote image. Default is `header`. One of:
-  * `download` (downloads the remote file to your machine)
-  * `header` (serves the remote file directly)
-  * `local` (like `download` but serves an image from a directory in the current parent theme if the download fails)
-  * `photon` (like `header` but uses arguments compatible with []() to size the image)
+* `bfp_mode`: The method used to retrieve the remote image. Default is `header`. One of:
+	* `download` (downloads the remote file to your machine)
+	* `header` (serves the remote file directly)
+	* `local` (like `download` but serves an image from a directory in the current parent theme if the download fails)
+	* `photon` (like `header` but uses arguments compatible with image resizing)
 
-* `sfp_url`: The absolute URL to the uploads directory on the source site.
+* `bfp_url`: The absolute URL to the uploads directory on the source site.
 
-* `sfp_local_dir`: The name of the directory in the parent theme where images are stored for `local` mode.
+* `bfp_local_dir`: The name of the directory in the parent theme where images are stored for `local` mode.
+
+## Legacy compatibility
+
+Older `sfp_*` option values and filter names are still read as fallbacks during migration.

@@ -3,7 +3,7 @@
  * Plugin Name: Bedrock File Proxy
  * Plugin URI: https://blog.utc.edu
  * Description: Get only the files you need from your production environment. Don't run this in production!
- * Version: 0.1.3
+ * Version: 0.1.6
  * Author: University of Tennessee at Chattanooga
  * Author URI: https://www.utc.edu
  */
@@ -11,11 +11,11 @@
 /**
  * The majority of this plugin is an upgraded and modernized version of the Stage
  * File Proxy plugin published, and deprecated, by Alley Interactive. Further work
- * was done by Charles Leverington, Taoti Creative: https://taoti.com
+ * was done by Charles Leverington, Taoti Creative: https://taoti.com.
  * Adapted for Bedrock WordPress Multisite by PHPStorm AI and UTChatttanooga.
  */
 
-namespace SFP;
+namespace BFP;
 
 if ( ! defined( 'WPINC' ) ) {
 	die;
@@ -67,7 +67,7 @@ function render_php_version_notice(): void {
 			echo wp_kses_post(
 				sprintf(
 				/* translators: %s: Minimum required PHP version */
-					__( 'Stage File Proxy requires PHP version %s or later. Please upgrade PHP or disable the plugin.', 'stage-file-proxy' ),
+					__( 'Bedrock File Proxy requires PHP version %s or later. Please upgrade PHP or disable the plugin.', 'bedrock-file-proxy' ),
 					esc_html( minimum_php_requirement() )
 				)
 			);
@@ -86,7 +86,7 @@ function render_production_notice(): void {
 	?>
 	<div class="notice notice-error">
 		<p>
-			<?php esc_html_e( 'URGENT: Stage File Proxy Plugin should not be active on Production Environments.', 'stage-file-proxy' ); ?>
+			<?php esc_html_e( 'URGENT: Bedrock File Proxy should not be active on Production Environments.', 'bedrock-file-proxy' ); ?>
 		</p>
 	</div>
 	<?php
@@ -104,30 +104,26 @@ if ( ! site_meets_php_requirements() ) {
  * Configured to allow for easy version checking and prevent 'update' notices
  * from published version of the plugin this version forked from.
  */
-if ( ! defined( 'STAGE_FILE_PROXY_VERSION' ) ) {
-	define( 'STAGE_FILE_PROXY_VERSION', '0.1.2' );
+if ( ! defined( 'BEDROCK_FILE_PROXY_VERSION' ) ) {
+	define( 'BEDROCK_FILE_PROXY_VERSION', '0.1.4' );
 }
 
-// Plugin folder path.
-if ( ! defined( 'STAGE_FILE_PROXY_DIR' ) ) {
-	define( 'STAGE_FILE_PROXY_DIR', plugin_dir_path( __FILE__ ) );
+if ( ! defined( 'BEDROCK_FILE_PROXY_DIR' ) ) {
+	define( 'BEDROCK_FILE_PROXY_DIR', plugin_dir_path( __FILE__ ) );
 }
 
-// Plugin folder URL.
-if ( ! defined( 'STAGE_FILE_PROXY_URL' ) ) {
-	define( 'STAGE_FILE_PROXY_URL', plugin_dir_url( __FILE__ ) );
+if ( ! defined( 'BEDROCK_FILE_PROXY_URL' ) ) {
+	define( 'BEDROCK_FILE_PROXY_URL', plugin_dir_url( __FILE__ ) );
 }
 
-// Plugin root file.
-if ( ! defined( 'STAGE_FILE_PROXY_FILE' ) ) {
-	define( 'STAGE_FILE_PROXY_FILE', __FILE__ );
+if ( ! defined( 'BEDROCK_FILE_PROXY_FILE' ) ) {
+	define( 'BEDROCK_FILE_PROXY_FILE', __FILE__ );
 }
 
-require_once STAGE_FILE_PROXY_DIR . 'includes/admin.php';
+require_once BEDROCK_FILE_PROXY_DIR . 'includes/admin.php';
 
-// If this is a production environment, do not let the plugin load.
 if ( site_in_development() ) {
-	require_once STAGE_FILE_PROXY_DIR . 'includes/image-processing.php';
+	require_once BEDROCK_FILE_PROXY_DIR . 'includes/image-processing.php';
 } else {
 	add_action( 'admin_notices', __NAMESPACE__ . '\\render_production_notice' );
 }
