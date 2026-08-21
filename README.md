@@ -34,6 +34,30 @@ There are four options for this plugin, though only two are currently available 
 wp option update bfp_mode header
 ```
 
+### Multisite configuration
+
+For a Bedrock multisite installation, set `bfp_url` to the remote network's uploads root. Do not include a site's `sites/{blog_id}` directory in this value; that path is part of the requested file path and is appended automatically.
+
+For example, to proxy uploads from `https://blog.example.com` in a local multisite environment:
+
+```shell
+wp plugin activate bedrock-file-proxy --url=https://local.example/
+wp option update bfp_url https://blog.example.com/app/uploads/ --url=https://local.example/
+wp option update bfp_mode download --url=https://local.example/
+```
+
+The plugin and options must be configured on the main site. Multisite upload URLs are network-rooted, so a request such as:
+
+```text
+https://local.example/app/uploads/sites/9/2026/08/Expedition-unknown.png
+```
+
+is handled by the main site even when the image belongs to site 9 (`/news/`). With the configuration above, the proxy downloads the missing file from:
+
+```text
+https://blog.example.com/app/uploads/sites/9/2026/08/Expedition-unknown.png
+```
+
 
 ## Available options
 
